@@ -24,6 +24,9 @@
 # any config file values.
 TELEGRAF_OPTS=
 
+USER=root
+GROUP=root
+
 if [ -r /lib/lsb/init-functions ]; then
     source /lib/lsb/init-functions
 fi

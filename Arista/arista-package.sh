@@ -92,6 +92,8 @@ cp $CONFIG_FILES_DIR/telegraf.logrotate $TMP_CONFIG_DIR/etc/logrotate.d/telegraf
 mkdir -p $TMP_CONFIG_DIR/lib/systemd/system
 cp $CONFIG_FILES_DIR/telegraf.service $TMP_CONFIG_DIR/lib/systemd/system/telegraf.service
 mkdir -p $TMP_CONFIG_DIR/etc/telegraf
+mkdir -p $TMP_CONFIG_DIR/usr/lib/telegraf/scripts
+cp $CONFIG_FILES_DIR/init.sh $TMP_CONFIG_DIR/usr/lib/telegraf/scripts
 
 # Linux-Config
 cp $CONFIG_FILES_DIR/telegraf-linux.conf $TMP_CONFIG_DIR/etc/telegraf/telegraf.conf
@@ -106,6 +108,10 @@ rm -f $TMP_CONFIG_DIR/etc/telegraf/telegraf.d/*
 cp $CONFIG_FILES_DIR/telegraf-redis.conf $TMP_CONFIG_DIR/etc/telegraf/telegraf.d
 fpm -s dir -t rpm $CONFIG_FPM_ARGS --description "$DESCRIPTION" -n "telegraf-Redis" etc lib || cleanup_exit 1
 
+# Atest server Config
+rm -f $TMP_CONFIG_DIR/etc/telegraf/telegraf.d/*
+cp $CONFIG_FILES_DIR/telegraf-atest.conf $TMP_CONFIG_DIR/etc/telegraf/telegraf.conf
+fpm -s dir -t rpm $CONFIG_FPM_ARGS --description "$DESCRIPTION" -n "telegraf-atest" etc lib usr || cleanup_exit 1
 
 mv ./*.rpm RPMS
 

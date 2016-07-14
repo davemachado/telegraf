@@ -19,7 +19,7 @@ GOBIN=$GOPATH/bin
 TMP_BIN_DIR=./rpm_bin
 TMP_CONFIG_DIR=./rpm_config
 CONFIG_FILES_DIR=./ConfigFiles
-CONFIG_FILES_VER=1.2
+CONFIG_FILES_VER=1.4
 CONFIG_FILES_ITER=1
 
 LICENSE=MIT
@@ -29,9 +29,8 @@ VENDOR=Influxdata
 
 set -e
 
-# Get version from latest tag
-revision=`git rev-list --tags --max-count=1`
-version=$(git describe --tags $revision | sed 's/^v//' )
+# Get version from tag closest to HEAD
+version=$(git describe --tags --abbrev=0 | sed 's/^v//' )
 
 # Build and install the latest code
 echo "Building and Installing telegraf"
@@ -92,19 +91,17 @@ cp $CONFIG_FILES_DIR/telegraf.logrotate $TMP_CONFIG_DIR/etc/logrotate.d/telegraf
 mkdir -p $TMP_CONFIG_DIR/lib/systemd/system
 cp $CONFIG_FILES_DIR/telegraf.service $TMP_CONFIG_DIR/lib/systemd/system/telegraf.service
 mkdir -p $TMP_CONFIG_DIR/etc/telegraf
+mkdir -p $TMP_CONFIG_DIR/etc/telegraf/telegraf.d
 mkdir -p $TMP_CONFIG_DIR/usr/lib/telegraf/scripts
 cp $CONFIG_FILES_DIR/init.sh $TMP_CONFIG_DIR/usr/lib/telegraf/scripts
 
 # Linux-Config
+rm -f $TMP_CONFIG_DIR/etc/telegraf/telegraf.d/*
 cp $CONFIG_FILES_DIR/telegraf-linux.conf $TMP_CONFIG_DIR/etc/telegraf/telegraf.conf
-
 fpm -s dir -t rpm $CONFIG_FPM_ARGS --description "$DESCRIPTION" -n "telegraf-Linux" etc lib || cleanup_exit 1
 
-mkdir -p $TMP_CONFIG_DIR/etc/telegraf/telegraf.d
-
-rm -f $TMP_CONFIG_DIR/etc/telegraf/telegraf.d/*
 # Redis-Config
-
+rm -f $TMP_CONFIG_DIR/etc/telegraf/telegraf.d/*
 cp $CONFIG_FILES_DIR/telegraf-redis.conf $TMP_CONFIG_DIR/etc/telegraf/telegraf.d
 fpm -s dir -t rpm $CONFIG_FPM_ARGS --description "$DESCRIPTION" -n "telegraf-Redis" etc lib || cleanup_exit 1
 
@@ -112,6 +109,11 @@ fpm -s dir -t rpm $CONFIG_FPM_ARGS --description "$DESCRIPTION" -n "telegraf-Red
 rm -f $TMP_CONFIG_DIR/etc/telegraf/telegraf.d/*
 cp $CONFIG_FILES_DIR/telegraf-atest.conf $TMP_CONFIG_DIR/etc/telegraf/telegraf.conf
 fpm -s dir -t rpm $CONFIG_FPM_ARGS --description "$DESCRIPTION" -n "telegraf-atest" etc lib usr || cleanup_exit 1
+
+# Perforce-Config
+rm -rf $TMP_CONFIG_DIR/etc/telegraf/telegraf.d/*
+cp $CONFIG_FILES_DIR/telegraf-perforce.conf $TMP_CONFIG_DIR/etc/telegraf/telegraf.conf
+fpm -s dir -t rpm $CONFIG_FPM_ARGS --description "$DESCRIPTION" -n "telegraf-Perforce" etc lib || cleanup_exit 1
 
 mv ./*.rpm RPMS
 
